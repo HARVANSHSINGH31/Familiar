@@ -14,11 +14,11 @@ KNOWN_PEOPLE = {
 }
 
 def on_face_detected(name: str, confidence: float):
-    print(f"[KINNECT] Face confirmed: {name} ({confidence}%)")
+    print(f"[FAMILIAR] Face confirmed: {name} ({confidence}%)")
 
     person = KNOWN_PEOPLE.get(name)
     if not person:
-        print(f"[KINNECT] {name} not in database. Skipping voice cue.")
+        print(f"[FAMILIAR] {name} not in database. Skipping voice cue.")
         return
 
     cue = generate_cue(
@@ -27,9 +27,9 @@ def on_face_detected(name: str, confidence: float):
         extra_context=person.get("context", "")
     )
 
-    print(f"[KINNECT] Cue: '{cue}'")
+    print(f"[FAMILIAR] Cue: '{cue}'")
     speak(cue)
 
 if __name__ == "__main__":
-    print("[KINNECT] Starting. Press Q in camera window to quit.")
+    print("[FAMILIAR] Starting. Press Q in camera window to quit.")
     run_detector(on_face_detected)

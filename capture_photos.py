@@ -24,7 +24,7 @@ while True:
                 (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
     cv2.putText(display, "SPACE=capture  Q=quit", 
                 (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 1)
-    cv2.imshow("Kinnect - Photo Capture", display)
+    cv2.imshow("Familiar - Photo Capture", display)
 
     key = cv2.waitKey(1) & 0xFF
     if key == ord(' '):

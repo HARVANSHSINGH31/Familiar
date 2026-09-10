@@ -70,7 +70,7 @@ def run_detector(on_face_detected, headless=False):
                             ).start()
                         else:
                             face_detected_time.pop(name, None)
-                            print(f"[KINNECT] Low confidence ({confidence}%) for {name} — staying silent")
+                            print(f"[FAMILIAR] Low confidence ({confidence}%) for {name} — staying silent")
 
                     if not headless:
                         color = (0, 255, 0) if confidence >= CONFIDENCE_THRESHOLD else (0, 165, 255)
@@ -83,7 +83,7 @@ def run_detector(on_face_detected, headless=False):
             pass
 
         if not headless:
-            cv2.imshow("Kinnect - Press Q to quit", frame)
+            cv2.imshow("Familiar - Press Q to quit", frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         else:
