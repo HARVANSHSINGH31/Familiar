@@ -2,7 +2,7 @@
 
 > **"Remember everyone. Forget nothing."**
 
-A wearable AI assistive device for Alzheimer's and memory loss patients. Kinnect combines real-time face recognition with family voice cloning to help patients recognise loved ones — without embarrassment, without surveillance, without making them feel impaired.
+A wearable AI assistive device for Alzheimer's and memory loss patients. Familiar combines real-time face recognition with family voice cloning to help patients recognise loved ones — without embarrassment, without surveillance, without making them feel impaired.
 
 ---
 
@@ -16,9 +16,9 @@ Existing solutions are clinical, surveillance-heavy, or simply don't exist. No s
 
 ---
 
-## What Kinnect Does
+## What Familiar Does
 
-Kinnect is a two-piece wearable: a discreet brooch with an embedded camera, and a bone conduction earpiece.
+Familiar is a two-piece wearable: a discreet brooch with an embedded camera, and a bone conduction earpiece.
 
 **Layer 1 — Social dignity**
 When a known person approaches, the brooch camera identifies them. Before the patient has to ask, they hear — through the earpiece, in a family member's own cloned voice — *"Hi Nana, it's your daughter Priya."* The social moment is preserved. Nobody else in the room knows the device helped.
@@ -87,7 +87,7 @@ A companion web dashboard lets family register people, set reminders, and receiv
 
 ## Ethical Design
 
-Kinnect is built privacy-first by design, not as an afterthought.
+Familiar is built privacy-first by design, not as an afterthought.
 
 - **No footage transmitted.** The camera never sends video or images anywhere. All processing is on-device.
 - **No audio streaming.** The caregiver dashboard shows events only — who was recognised, when. Never what was said or heard.
@@ -100,12 +100,12 @@ Kinnect is built privacy-first by design, not as an afterthought.
 
 ```bash
 # Clone the repo
-git clone https://github.com/HARVANSHSINGH31/Kinnect.git
-cd Kinnect
+git clone https://github.com/HARVANSHSINGH31/Familiar.git
+cd Familiar
 
 # Create and activate environment
-conda create -n kinnect python=3.11
-conda activate kinnect
+conda create -n familiar python=3.11
+conda activate familiar
 
 # Install dependencies
 pip install deepface opencv-contrib-python elevenlabs flask pygame python-dotenv requests pillow
