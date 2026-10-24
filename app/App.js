@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import {
-  Alert, Animated, Pressable, ScrollView, StyleSheet, Text, Vibration, View,
+    Alert, Animated, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, Vibration, View,
 } from 'react-native';
 import { useFonts } from 'expo-font';
 import {
@@ -106,14 +106,7 @@ export default function App() {
             text="Record a few short messages. When Dad gets up at night, the hub can play one, in your voice."
           />
         )}
-        {tab === 'family' && (
-          <ComingScreen
-            icon="users"
-            title="Share the"
-            italic="nights."
-            text="Choose who gets alerted, and in what order, so one person isn't carrying every night alone."
-          />
-        )}
+                {tab === 'family' && <FamilyScreen />}
       </View>
       <TabBar active={tab} onChange={(k) => { tap(); setTab(k); }} />
     </View>
@@ -287,6 +280,118 @@ function DevicesScreen() {
     </ScrollView>
   );
 }
+/* ---------- FAMILY ---------- */
+function FamilyScreen() {
+  const [reminders, setReminders] = useState([
+    { id: 1, time: '8:00 AM', label: 'Morning tablets', kind: 'pill', on: true },
+    { id: 2, time: '2:00 PM', label: 'A glass of water', kind: 'water', on: true },
+    { id: 3, time: '9:00 PM', label: 'Night tablets', kind: 'pill', on: true },
+    { id: 4, time: 'Thu 11:00 AM', label: 'Doctor visit', kind: 'doctor', on: false },
+  ]);
+  const [adding, setAdding] = useState(false);
+  const [newTime, setNewTime] = useState('');
+  const [newLabel, setNewLabel] = useState('');
+  const icons = { pill: 'plus-square', water: 'droplet', doctor: 'activity', other: 'bell' };
+
+  const toggle = (id) => {
+    tap();
+    setReminders(reminders.map((r) => (r.id === id ? { ...r, on: !r.on } : r)));
+  };
+  const remove = (id) => {
+    Alert.alert('Remove reminder?', '', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Remove', style: 'destructive', onPress: () => setReminders(reminders.filter((r) => r.id !== id)) },
+    ]);
+  };
+  const add = () => {
+    if (!newTime.trim() || !newLabel.trim()) return;
+    tap();
+    setReminders([...reminders, { id: Date.now(), time: newTime.trim(), label: newLabel.trim(), kind: 'other', on: true }]);
+    setNewTime(''); setNewLabel(''); setAdding(false);
+  };
+
+  return (
+    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <Header />
+      <Text style={styles.eyebrow}>Family</Text>
+      <Text style={styles.headline}>
+        {demo.person}'s day,{'\n'}<Text style={styles.headlineGold}>gently kept.</Text>
+      </Text>
+
+      <Text style={styles.sectionTitle}>Daily reminders</Text>
+      <Text style={[styles.cardSub, { marginTop: -6, marginBottom: 14 }]}>
+        Played aloud at the hub, in your recorded voice. Hold a reminder to remove it.
+      </Text>
+
+      {reminders.map((r) => (
+        <Pressable key={r.id} onLongPress={() => remove(r.id)} style={[styles.remRow, !r.on && { opacity: 0.45 }]}>
+          <View style={styles.remIcon}><Feather name={icons[r.kind]} size={17} color={colors.gold} /></View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.remLabel}>{r.label}</Text>
+            <Text style={styles.cardSub}>{r.time}</Text>
+          </View>
+          <Switch
+            value={r.on}
+            onValueChange={() => toggle(r.id)}
+            trackColor={{ false: colors.surfaceRaised, true: colors.goldBorder }}
+            thumbColor={r.on ? colors.gold : colors.muted}
+          />
+        </Pressable>
+      ))}
+
+      {adding ? (
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>WHAT</Text>
+          <TextInput
+            value={newLabel} onChangeText={setNewLabel}
+            placeholder="e.g. Evening walk" placeholderTextColor={colors.muted} style={styles.input}
+          />
+          <Text style={[styles.cardLabel, { marginTop: 12 }]}>WHEN</Text>
+          <TextInput
+            value={newTime} onChangeText={setNewTime}
+            placeholder="e.g. 6:30 PM" placeholderTextColor={colors.muted} style={styles.input}
+          />
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+            <Pressable style={[styles.goldBtn, { flex: 1, marginTop: 0 }]} onPress={add}>
+              <Text style={styles.goldBtnText}>Save</Text>
+            </Pressable>
+            <Pressable style={[styles.ghostBtn, { flex: 1 }]} onPress={() => setAdding(false)}>
+              <Text style={styles.btnText}>Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : (
+        <Pressable style={styles.ghostBtn} onPress={() => { tap(); setAdding(true); }}>
+          <Feather name="plus" size={16} color={colors.gold} />
+          <Text style={[styles.btnText, { color: colors.gold }]}>Add a reminder</Text>
+        </Pressable>
+      )}
+
+      <Text style={[styles.sectionTitle, { marginTop: 30 }]}>Who gets alerted</Text>
+      <View style={styles.card}>
+        <View style={styles.personRow}>
+          <View style={styles.personAvatar}><Text style={styles.avatarText}>H</Text></View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.remLabel}>You</Text>
+            <Text style={styles.cardSub}>Alerted first, every night</Text>
+          </View>
+        </View>
+      </View>
+      <Pressable
+        style={styles.ghostBtn}
+        onPress={() => { tap(); Alert.alert('Invite family (demo)', 'Soon you can invite a sibling as a backup: if you don\'t respond in 2 minutes, they get the alert.'); }}
+      >
+        <Feather name="user-plus" size={16} color={colors.gold} />
+        <Text style={[styles.btnText, { color: colors.gold }]}>Add a family member</Text>
+      </Pressable>
+
+      <Text style={styles.demoNote}>Reminders are a helping hand, not medical advice.</Text>
+    </ScrollView>
+  );
+}
+
+
+
 
 /* ---------- COMING NEXT ---------- */
 function ComingScreen({ icon, title, italic, text }) {
@@ -407,7 +512,14 @@ const styles = StyleSheet.create({
   comingText: { fontFamily: fonts.sans, color: colors.muted, fontSize: 16, lineHeight: 25 },
   comingTag: { alignSelf: 'flex-start', marginTop: 24, borderWidth: 1, borderColor: colors.goldBorder, borderRadius: 999, paddingVertical: 7, paddingHorizontal: 14 },
   comingTagText: { fontFamily: fonts.sansMedium, color: colors.gold, fontSize: 12, letterSpacing: 1 },
-
+  
+  remRow: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.surface, borderRadius: 18, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: colors.border },
+  remIcon: { width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: colors.goldBorder, alignItems: 'center', justifyContent: 'center' },
+  remLabel: { fontFamily: fonts.sansSemi, color: colors.ink, fontSize: 16 },
+  input: { fontFamily: fonts.sans, color: colors.ink, fontSize: 16, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, backgroundColor: colors.bg },
+  ghostBtn: { marginTop: 6, borderWidth: 1, borderColor: colors.goldBorder, borderRadius: 999, paddingVertical: 15, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
+  personRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  personAvatar: { width: 42, height: 42, borderRadius: 21, borderWidth: 1, borderColor: colors.goldBorder, alignItems: 'center', justifyContent: 'center' },
   tabBar: { flexDirection: 'row', backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 10, paddingBottom: 26, alignItems: 'center' },
   tabItem: { flex: 1, alignItems: 'center', gap: 4 },
   tabLabel: { fontFamily: fonts.sansMedium, color: colors.muted, fontSize: 11 },
