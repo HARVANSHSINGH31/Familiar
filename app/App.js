@@ -13,7 +13,9 @@ import {
 } from '@expo-google-fonts/inter';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import * as Speech from 'expo-speech';
 import { brand, colors, fonts } from './theme';
+import { supabase } from './supabase';
 
 // ⚠️ DEMO DATA: replaced by live data from the hub later
 const demo = {
@@ -60,24 +62,61 @@ export default function App() {
     Inter_500Medium,
     Inter_600SemiBold,
   });
-  const [tab, setTab] = useState('tonight');
+    const [tab, setTab] = useState('tonight');
   const [alerting, setAlerting] = useState(false);
   const [events, setEvents] = useState(demo.events);
   const [alertTime, setAlertTime] = useState(null);
+  const [alertId, setAlertId] = useState(null);
+
+  const fmt = (iso) =>
+    new Date(iso)
+      .toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+      .replace(/am|pm/i, (m) => m.toUpperCase());
+
+  // Listen live for new events from the hub (or the dashboard)
+  useEffect(() => {
+    const channel = supabase
+      .channel('events-demo')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'events', filter: 'household=eq.demo' },
+        (payload) => {
+          const row = payload.new;
+          if (row.type === 'left_room') {
+            setAlertId(row.id);
+            setAlertTime(fmt(row.created_at));
+            setAlerting(true);
+          }
+        }
+      )
+      .subscribe((status) => console.log('ARERA realtime:', status));
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   if (!loaded) return <View style={{ flex: 1, backgroundColor: colors.bg }} />;
 
-  const startAlert = () => {
-    setAlertTime(nowTime());
-    setAlerting(true);
+  // The test button now writes a REAL row; the listener above shows the alert
+  const startAlert = async () => {
+    const { error } = await supabase
+      .from('events')
+      .insert({ type: 'left_room', detail: 'test from the app' });
+    if (error) Alert.alert('Could not reach ARERA', error.message);
   };
 
   const handled = (response) => {
     tap();
+    if (alertId) {
+      supabase
+        .from('events')
+        .update({ response, responded_at: new Date().toISOString() })
+        .eq('id', alertId)
+        .then(({ error }) => error && console.log('respond error:', error.message));
+    }
     setEvents([
       { time: alertTime, text: `Left the bedroom · ${response}`, type: 'alert' },
       ...events,
     ]);
+    setAlertId(null);
     setAlerting(false);
     setTab('tonight');
   };
@@ -411,10 +450,18 @@ function ComingScreen({ icon, title, italic, text }) {
 /* ---------- ALERT ---------- */
 function AlertScreen({ time, onHandled }) {
   const [seconds, setSeconds] = useState(0);
-  useEffect(() => {
+    useEffect(() => {
     Vibration.vibrate([0, 600, 400], true);
     const timer = setInterval(() => setSeconds((s) => s + 1), 1000);
-    return () => { Vibration.cancel(); clearInterval(timer); };
+    const say = () => Speech.speak(`${demo.person} has left the bedroom.`, { rate: 0.95 });
+    say();
+    const voice = setInterval(say, 6000);
+    return () => {
+      Vibration.cancel();
+      clearInterval(timer);
+      clearInterval(voice);
+      Speech.stop();
+    };
   }, []);
   const mm = Math.floor(seconds / 60);
   const ss = String(seconds % 60).padStart(2, '0');
