@@ -4,8 +4,14 @@ import threading
 from deepface import DeepFace
 
 last_triggered = {}
+_stop = threading.Event()
 COOLDOWN_SECONDS = 300
 CONFIDENCE_THRESHOLD = 70.0  # Below this, stay silent — wrong cue is worse than no cue
+
+def request_stop():
+    """Ask a running detector loop to finish. Safe to call from another thread."""
+    _stop.set()
+
 
 def should_trigger(person_name):
     now = time.time()
@@ -23,11 +29,12 @@ def run_detector(on_face_detected, headless=False):
     if not cap.isOpened():
         print("ERROR: Cannot open camera.")
         return
+    _stop.clear()
     print("Camera started. Press Q to quit.")
     face_detected_time = {}
     CONFIRM_SECONDS = 1.5
 
-    while True:
+    while not _stop.is_set():
         ret, frame = cap.read()
         if not ret:
             print("ERROR: Failed to grab frame.")
@@ -70,7 +77,7 @@ def run_detector(on_face_detected, headless=False):
                             ).start()
                         else:
                             face_detected_time.pop(name, None)
-                            print(f"[FAMILIAR] Low confidence ({confidence}%) for {name} — staying silent")
+                            print(f"[ARERA] Low confidence ({confidence}%) for {name} — staying silent")
 
                     if not headless:
                         color = (0, 255, 0) if confidence >= CONFIDENCE_THRESHOLD else (0, 165, 255)
@@ -83,7 +90,7 @@ def run_detector(on_face_detected, headless=False):
             pass
 
         if not headless:
-            cv2.imshow("Familiar - Press Q to quit", frame)
+            cv2.imshow("ARERA - Press Q to quit", frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         else:

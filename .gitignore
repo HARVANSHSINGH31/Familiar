@@ -7,3 +7,14 @@ __pycache__/
 *.db
 .DS_Store
 .vscode/
+
+# never push
+secrets.h
+.env
+.env.local
+.env*.local
+node_modules/
+dist/
+.vercel/
+.expo/
+.DS_Store
